@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laboratório forense: nível avançado</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f5;--panel:#fff;--ink:#0f1e2b;--mute:#52667a;--line:#d3dde5;--acc:#0a6f8c;--accbg:#dff1f6;--bad:#b4233a;--badbg:#fbe5e9;--gel:#0b1a26;--gline:#17303f;--band:#ffa23a;--ok:#4fd1e8;--gtxt:#9fb6c7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#08121b;--panel:#0f2030;--ink:#e6eef4;--mute:#8fa5b8;--line:#1f3447;--acc:#5ec8e5;--accbg:#12384a;--bad:#ff8497;--badbg:#3a1a24}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#08121b;--panel:#0f2030;--ink:#e6eef4;--mute:#8fa5b8;--line:#1f3447;--acc:#5ec8e5;--accbg:#12384a;--bad:#ff8497;--badbg:#3a1a24}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.55 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 3rem}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;line-height:1.15;margin:0}
+h1{font-size:clamp(1.8rem,5vw,2.8rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.25rem;font-weight:700;margin-bottom:.6rem}
+.lead{color:var(--mute);max-width:64ch;margin:.5rem 0 1.25rem}
+#cases{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:.55rem .9rem}
+button:hover:not(:disabled){border-color:var(--acc)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,.rn:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+button.on,button.pri{background:var(--acc);color:var(--panel);border-color:var(--acc);font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:1rem}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.1rem}
+.ev{display:grid;gap:.5rem;margin:.75rem 0}
+.ev button{text-align:left;display:block;width:100%}
+.ev button b{display:block}
+.ev button span{color:var(--mute);font-size:.9rem}
+.ev button.on span{color:inherit}
+.msg{padding:.6rem .8rem;border-radius:8px;background:var(--accbg);font-size:.95rem;margin:.5rem 0}
+.msg.bad{background:var(--badbg)}
+.timer{font-variant-numeric:tabular-nums;color:var(--mute);margin-top:.75rem;font-size:.95rem}
+.timer.over{color:var(--bad);font-weight:600}
+.gelcard{background:var(--gel);border-color:var(--gline);color:var(--gtxt)}
+.gelcard h2{color:#e6eef4}
+.gel{display:grid;grid-template-columns:2.9rem repeat(7,1fr);background:#07121b;border:1px solid var(--gline);border-radius:8px;overflow:hidden}
+.lh{text-align:center;padding:.4rem 0;font-weight:600;font-size:.85rem;border-bottom:1px solid var(--gline);color:#e6eef4}
+.lh.sel{color:var(--ok)}
+.rn{display:flex;align-items:center;justify-content:center;font-size:.68rem;color:#6f8a9e;height:1.75rem;cursor:pointer}
+.rn:hover{color:var(--ok)}
+.c{height:1.75rem;display:flex;align-items:center;justify-content:center;border-left:1px solid var(--gline);border-top:1px dashed #10263a}
+.c.dim{opacity:.3}
+.c.hl{background:#12344d}
+.c.deg{background:repeating-linear-gradient(45deg,#14222e,#14222e 4px,#0b1a26 4px,#0b1a26 8px)}
+.b{display:block;width:70%;height:8px;border-radius:2px;background:var(--band);box-shadow:0 0 10px var(--band)}
+.b.pop{animation:pop .5s both;animation-delay:var(--d)}
+@keyframes pop{from{opacity:0;transform:scaleX(.2)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.b.pop{animation:none}}
+.q{font-size:1.3rem;color:#5d788c}
+#cmp{margin-top:.9rem;min-height:3.5rem;color:#cfdce6}
+.legend{font-size:.85rem;margin-top:.5rem;color:var(--gtxt)}
+.chip{display:inline-block;padding:.1rem .6rem;border-radius:99px;font-weight:600;font-size:.9rem;margin-right:.4rem}
+.chip.ok{background:var(--accbg);color:var(--acc)}
+.chip.bad{background:var(--badbg);color:var(--bad)}
+#suspects{margin-top:1rem}
+.sus{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:.5rem}
+.sc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:.9rem}
+.sc.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.sc.pick{border-color:var(--band);box-shadow:0 0 0 2px var(--band)}
+.sc h3{font-size:1.05rem}
+.sc p{margin:.2rem 0 .7rem;color:var(--mute);font-size:.92rem}
+.row{display:flex;gap:.4rem;flex-wrap:wrap}
+.concl{margin-top:1rem}
+#result{margin-top:1.25rem;border-width:2px}
+#result.win{border-color:var(--acc)}
+#result.lose{border-color:var(--bad)}
+.stats{display:flex;gap:1.5rem;flex-wrap:wrap;margin:.6rem 0}
+.stats b{display:block;font-size:1.3rem;font-family:"Bricolage Grotesque",sans-serif}
+table{width:100%;border-collapse:collapse;margin:.75rem 0;font-size:.95rem}
+td,th{text-align:left;padding:.45rem .4rem;border-bottom:1px solid var(--line);vertical-align:top}
+.tw{overflow-x:auto}
+.sci{border-left:3px solid var(--acc);padding-left:.8rem;margin:.9rem 0}
+.opts{display:grid;gap:.5rem;margin:.6rem 0}
+.opts button{text-align:left}
+p{max-width:72ch}
+</style>
+</head>
+<body>
+<main>
+<h1>Laboratório forense: nível avançado</h1>
+<p class="lead">Aqui não basta ver se duas colunas são iguais. Leia o gel com rigor, desconfie dos controlos e decida o que a prova permite mesmo concluir. Há perfis misturados, amostras degradadas e resultados que podem ser inválidos.</p>
+<nav id="cases" aria-label="Casos"></nav>
+<div class="grid">
+  <section class="card" id="file" aria-live="polite"></section>
+  <section class="card gelcard">
+    <h2>Gel de eletroforese</h2>
+    <div id="gel"></div>
+    <div class="legend">Os números à esquerda são o tamanho dos fragmentos em pares de bases (pb). C− é o controlo negativo, preparado sem ADN. Zona tracejada: fragmentos ilegíveis. Clique num tamanho para marcar a linha.</div>
+    <div id="cmp" aria-live="polite"></div>
+  </section>
+</div>
+<section id="suspects"></section>
+<section id="result" class="card" hidden tabindex="-1"></section>
+</main>
+<script>
+const SZ=[3000,2400,2000,1600,1300,1000,800,600,450,300];
+const LIM=300000;
+const KIND={id:"Identificar o(s) suspeito(s)",none:"Nenhum suspeito corresponde",inc:"Prova inconclusiva",inv:"Análise inválida: repetir"};
+const CASES=[
+{id:"031",title:"O cacifo aberto",mode:"one",deg:[],ctrl:[],max:3,
+ story:"Um telemóvel desapareceu de um cacifo. O ladrão bebeu da garrafa deixada lá dentro. A amostra está íntegra e os controlos estão limpos, mas cinco suspeitos têm perfis muito parecidos.",
+ ev:[["Garrafa de água","Saliva no gargalo.",1],["Cadeado forçado","Só impressões digitais, sem ADN para extrair.",0],["Bilhete do ginásio","Papel e tinta.",0]],
+ sample:[2,3,5,7,8,10],
+ sus:[["A","Alex","aluno do 12.º ano",[2,3,5,7,8,9]],["B","Beatriz","treinadora de voleibol",[2,3,5,7,8,10]],["C","Carlos","funcionário do ginásio",[2,4,5,7,8,10]],["D","Diana","capitã da equipa",[1,3,5,7,8,10]],["E","Eduardo","aluno de intercâmbio",[2,3,5,6,8,10]]],
+ kind:"id",ans:["B"],
+ why:"Só Beatriz tem as seis bandas nas posições da prova. Os outros quatro diferem numa única banda, ausente ou deslocada, e uma diferença basta para excluir.",
+ q:["Em que sentido migra o ADN no gel e porquê?","Para o polo positivo, porque os grupos fosfato lhe dão carga negativa","Para o polo negativo, porque as bases azotadas são positivas","Para o polo positivo, porque é uma molécula neutra","Para o polo negativo, porque os fragmentos grandes são pesados"]},
+{id:"032",title:"A maçaneta partilhada",mode:"mix",deg:[],ctrl:[],max:4,
+ story:"Depois de um furto no laboratório de robótica, recolheu-se ADN numa maçaneta. A amostra contém material de exatamente duas pessoas, por isso o perfil é a sobreposição de dois perfis individuais.",
+ ev:[["Maçaneta da porta","Zaragatoa com células epiteliais.",1],["Fita-cola rasgada","Só adesivo e fibras.",0],["Cartão de acesso","Plástico, sem células recolhidas.",0]],
+ sample:[1,3,5,6,8,9,10],
+ sus:[["A","Alex","aluno do clube de robótica",[1,3,6,9]],["B","Beatriz","professora de Física",[2,5,7,10]],["C","Carlos","aluno do 12.º ano",[1,5,6,10]],["D","Diana","auxiliar de laboratório",[3,5,8,10]],["E","Eduardo","técnico de manutenção",[2,4,8,9]]],
+ kind:"id",ans:["A","D"],
+ why:"Numa mistura, cada contribuinte tem de ter todas as bandas dentro da prova, e juntos têm de explicar todas as bandas. Só Alex e Diana cumprem as duas condições. Carlos é compatível sozinho, mas com ele fica por explicar a banda de 600 pb (com Alex) ou a de 450 pb (com Diana).",
+ q:["Porque é que a prova mostra mais bandas do que um perfil individual?","Porque o ADN dos dois contribuintes foi separado em conjunto e as bandas de ambos aparecem no mesmo gel","Porque o campo elétrico divide cada fragmento em dois","Porque a mistura cria fragmentos novos que nenhum deles tinha","Porque o gel foi corrido com o dobro do tempo"]},
+{id:"033",title:"A beata no telhado",mode:"one",deg:[1,2,3],ctrl:[],max:4,
+ story:"Uma beata antiga foi encontrada no telhado do pavilhão. O ADN está degradado: os fragmentos maiores (3000 a 2000 pb, zona tracejada) partiram-se e já não se leem.",
+ ev:[["Beata de cigarro","Saliva seca, exposta à chuva.",1],["Telha partida","Sem material biológico.",0],["Fósforo queimado","Só madeira.",0]],
+ sample:[4,6,9,10],
+ sus:[["A","Alex","aluno do 10.º ano",[1,4,6,9,10]],["B","Beatriz","aluna do 11.º ano",[2,4,6,9,10]],["C","Carlos","funcionário do pavilhão",[4,6,9,10]],["D","Diana","professora de Educação Física",[3,4,6,8,10]],["E","Eduardo","treinador de futsal",[1,5,6,9,10]]],
+ kind:"inc",ans:[],
+ why:"Alex, Beatriz e Carlos coincidem em todas as bandas legíveis (1600 a 300 pb). Só diferem na zona degradada, que não se pode ler, por isso a prova não permite distinguir os três. Diana e Eduardo estão excluídos.",
+ q:["Porque é que os fragmentos maiores se perdem primeiro numa amostra degradada?","Porque são mais longos e é mais provável que sofram quebras","Porque migram mais depressa e saem do gel","Porque têm menos nucleótidos e desnaturam","Porque a enzima de restrição só corta os pequenos"]},
+{id:"034",title:"O controlo que falhou",mode:"one",deg:[],ctrl:[4],max:3,
+ story:"Num roubo no ginásio, recolheu-se saliva numa garrafa. Em cada análise corre-se também um controlo negativo (C−), preparado sem ADN, para detetar contaminação.",
+ ev:[["Garrafa de água","Saliva no gargalo.",1],["Cadeado forçado","Só impressões digitais.",0],["Bilhete do ginásio","Papel e tinta.",0]],
+ sample:[2,4,7,9],
+ sus:[["A","Alex","aluno do 12.º ano",[2,4,7,10]],["B","Beatriz","treinadora de voleibol",[2,5,7,9]],["C","Carlos","funcionário do ginásio",[2,4,7,9]],["D","Diana","capitã da equipa",[1,4,7,9]],["E","Eduardo","aluno de intercâmbio",[2,4,6,9]]],
+ kind:"inv",ans:[],
+ why:"O controlo negativo tem uma banda de 1600 pb. Num gel válido não devia haver nenhuma, por isso houve contaminação com ADN estranho. Carlos coincide com a prova, mas com o controlo contaminado a análise é inválida e tem de ser repetida.",
+ q:["Para que serve o controlo negativo?","Detetar contaminação dos reagentes ou do material com ADN estranho","Fornecer ADN de referência de um suspeito","Servir de escala para medir o tamanho dos fragmentos","Aumentar a quantidade de ADN da prova"]},
+{id:"035",title:"Os gémeos do bar",mode:"one",deg:[],ctrl:[],max:4,
+ story:"Num furto no bar da escola, recolheu-se uma gota de sangue num vidro partido. Dois dos suspeitos, Duarte e Diogo, são gémeos monozigóticos.",
+ ev:[["Vidro partido","Gota de sangue seca.",1],["Registo de caixa","Papel e tinta.",0],["Pegadas","Pó no chão, sem material biológico.",0]],
+ sample:[1,3,4,7,9,10],
+ sus:[["A","Alex","aluno do 12.º ano",[1,3,5,7,9,10]],["B","Duarte","aluno do 11.º ano, gémeo de Diogo",[1,3,4,7,9,10]],["C","Carlos","funcionário do bar",[1,3,4,7,8,10]],["D","Diogo","aluno do 11.º ano, gémeo de Duarte",[1,3,4,7,9,10]],["E","Eduardo","aluno do 10.º ano",[2,3,4,7,9,10]]],
+ kind:"inc",ans:[],
+ why:"Duarte e Diogo têm perfis idênticos à prova. Gémeos monozigóticos vêm do mesmo zigoto e partilham o mesmo genoma, por isso este método não os distingue: seriam precisas outras provas.",
+ q:["Porque é que gémeos monozigóticos têm perfis de ADN idênticos?","Porque resultam da divisão de um único zigoto e têm o mesmo genoma","Porque partilham metade dos alelos, como quaisquer irmãos","Porque têm o mesmo grupo sanguíneo","Porque o gel não distingue fragmentos parecidos"]}
+];
+const $=s=>document.querySelector(s);
+let S,timer;
+const bp=a=>a.map(r=>SZ[r-1]+" pb").join(", ");
+const fmt=ms=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function chk(s){const C=CASES[S.c],sa=C.sample,sb=s[3].filter(r=>!C.deg.includes(r));
+ if(C.mode==="mix"){const o=sb.filter(x=>!sa.includes(x));return{ok:!o.length,why:o.length?"tem a banda de "+bp(o)+", ausente na mistura":"todas as bandas estão na mistura"}}
+ const m=sa.filter(x=>!sb.includes(x)),e=sb.filter(x=>!sa.includes(x));
+ return{ok:!m.length&&!e.length,why:[m.length?"falta a banda de "+bp(m):"",e.length?"banda a mais de "+bp(e):""].filter(Boolean).join("; ")||"perfil igual ao da prova"}}
+function load(i){clearInterval(timer);S={c:i,ev:null,an:false,cmp:null,seen:new Set(),sel:new Set(),hl:new Set(),done:false,t0:0,fresh:false,base:0,bonus:0};$("#result").hidden=true;render()}
+function render(){rCases();rFile();rGel();rSus()}
+function rCases(){$("#cases").innerHTML=CASES.map((c,i)=>`<button class="${i===S.c?"on":""}" onclick="load(${i})">Caso ${c.id}: ${c.title}</button>`).join("")}
+function rFile(){const C=CASES[S.c];let h=`<h2>Caso n.º ${C.id}: ${C.title}</h2><p>${C.story}</p><h3>Provas recolhidas</h3><div class="ev">`;
+ C.ev.forEach((e,j)=>{h+=`<button class="${S.ev===j?"on":""}" ${S.an?"disabled":""} onclick="pick(${j})"><b>${e[0]}</b><span>${e[1]}</span></button>`});
+ h+="</div>";
+ if(S.ev===null)h+=`<div class="msg">Escolha a prova onde pode haver ADN para extrair.</div>`;
+ else if(!C.ev[S.ev][2])h+=`<div class="msg bad">Esta prova não tem material biológico utilizável. Escolha outra.</div>`;
+ else if(!S.an)h+=`<div class="msg">Amostra biológica identificada. Pode extrair o ADN e correr o gel.</div><button class="pri" onclick="analyse()">Analisar amostra</button>`;
+ else h+=`<div class="msg">Gel concluído. Tem ${C.max} comparações e 5 minutos.</div>`;
+ h+=`<div class="timer" id="timer"></div>`;$("#file").innerHTML=h;tick()}
+function tick(){const t=$("#timer");if(!t)return;if(!S.an){t.textContent="";return}const ms=Date.now()-S.t0;t.textContent="Tempo de investigação: "+fmt(ms)+(ms>LIM?" (passou o limite de 5 minutos)":"");t.className="timer"+(ms>LIM?" over":"")}
+function pick(j){S.ev=j;rFile()}
+function analyse(){S.an=true;S.fresh=true;S.t0=Date.now();timer=setInterval(tick,1000);rFile();rGel();rSus()}
+function hl(r){S.hl.has(r)?S.hl.delete(r):S.hl.add(r);rGel()}
+function rGel(){const C=CASES[S.c];
+ const lanes=[{k:"N",l:"C−",b:S.an?C.ctrl:[]},{k:"S",l:"Prova",b:S.an?C.sample:[]},...C.sus.map(s=>({k:s[0],l:s[0],b:s[3]}))];
+ let h='<div class="gel" role="img" aria-label="Gel de eletroforese simulado com controlo negativo, prova e cinco suspeitos"><div class="lh">pb</div>'+lanes.map(l=>`<div class="lh ${S.cmp&&(l.k===S.cmp||l.k==="S")?"sel":""}">${l.l}</div>`).join("");
+ for(let r=1;r<=10;r++){h+=`<div class="rn" role="button" tabindex="0" onclick="hl(${r})" onkeydown="if(event.key==='Enter')hl(${r})">${SZ[r-1]}</div>`;
+  lanes.forEach(l=>{const has=l.b.includes(r),dim=S.cmp&&l.k!=="N"&&l.k!=="S"&&l.k!==S.cmp,dg=S.an&&l.k==="S"&&C.deg.includes(r);
+   const i=has?`<i class="b ${l.k==="S"&&S.fresh?"pop":""}" style="--d:${r*70}ms"></i>`:(l.k==="S"&&!S.an&&r===5?'<span class="q">?</span>':"");
+   h+=`<div class="c${dim?" dim":""}${dg?" deg":""}${S.hl.has(r)?" hl":""}">${i}</div>`})}
+ $("#gel").innerHTML=h+"</div>";S.fresh=false;
+ const sus=S.cmp&&C.sus.find(s=>s[0]===S.cmp);let c;
+ if(!S.an)c="Analise a prova para ver o gel.";
+ else if(!sus)c="Leia o gel com atenção, incluindo o controlo negativo. Depois escolha um suspeito e carregue em «Comparar».";
+ else c=`A comparar a prova com ${sus[1]}. `+(C.mode==="mix"?"A prova é uma mistura: veja se todas as bandas deste suspeito aparecem nela.":"Veja se as bandas coincidem em todas as zonas legíveis.")+`<div class="legend">Comparações restantes: ${C.max-S.seen.size}</div>`;
+ $("#cmp").innerHTML=c}
+function rSus(){const C=CASES[S.c],on=S.an&&!S.done;let h="<h2>Suspeitos</h2><div class=\"sus\">";
+ C.sus.forEach(s=>{const seen=S.seen.has(s[0]);
+  h+=`<div class="sc ${S.cmp===s[0]?"sel":""} ${S.sel.has(s[0])?"pick":""}"><h3>Suspeito ${s[0]}: ${s[1]}</h3><p>${s[2]}${seen?"<br>Já comparado":""}</p><div class="row"><button ${on&&(seen||S.seen.size<C.max)?"":"disabled"} onclick="compare('${s[0]}')">Comparar</button><button ${on?"":"disabled"} onclick="toggle('${s[0]}')">${S.sel.has(s[0])?"Retirar":"Selecionar"}</button></div></div>`});
+ h+=`</div><div class="concl"><h2>Conclusão</h2><p>Suspeitos selecionados: ${S.sel.size?[...S.sel].map(k=>C.sus.find(s=>s[0]===k)[1]).join(", "):"nenhum"}. Que conclusão a prova permite?</p><div class="row"><button class="pri" ${on&&S.sel.size?"":"disabled"} onclick="fin('id')">Identificar o(s) selecionado(s)</button>`+["none","inc","inv"].map(k=>`<button ${on?"":"disabled"} onclick="fin('${k}')">${KIND[k]}</button>`).join("")+"</div></div>";
+ $("#suspects").innerHTML=h}
+function compare(id){if(!S.seen.has(id)&&S.seen.size>=CASES[S.c].max)return;S.cmp=id;S.seen.add(id);rGel();rSus()}
+function toggle(id){S.sel.has(id)?S.sel.delete(id):S.sel.add(id);rSus()}
+let EX;
+function fin(k){S.done=true;clearInterval(timer);const ms=Date.now()-S.t0,C=CASES[S.c];
+ const right=k===C.kind&&(k!=="id"||(S.sel.size===C.ans.length&&C.ans.every(x=>S.sel.has(x))));
+ S.base=right?Math.max(10,100-S.seen.size*10-(ms>LIM?30:0)):0;rSus();
+ const nm=a=>a.map(x=>C.sus.find(s=>s[0]===x)[1]).join(" e ");
+ const res=C.kind==="id"?"identificar "+nm(C.ans):KIND[C.kind].toLowerCase();
+ const rows=C.sus.map(s=>{const r=chk(s);return `<tr><td>${s[1]}</td><td><span class="chip ${r.ok?"ok":"bad"}">${r.ok?"Compatível":"Excluído"}</span>${r.why}</td></tr>`}).join("");
+ EX=C.q.slice(1).map((t,i)=>({t,c:i===0}));EX.sort(()=>Math.random()-.5);
+ const R=$("#result");R.hidden=false;R.className="card "+(right?"win":"lose");
+ R.innerHTML=`<h2>${right?"Conclusão correta":"Conclusão incorreta"}</h2>${right?'<span class="chip ok">Investigador Forense</span>':""}
+ <div class="stats"><div><b>${fmt(ms)}</b>tempo${ms>LIM?" (acima de 5 min)":""}</div><div><b>${S.seen.size} de ${C.max}</b>comparações</div><div><b id="pts">${S.base}</b>pontos</div></div>
+ <p><b>Conclusão certa:</b> ${res}.${right?"":" A sua: "+(k==="id"?"identificar "+(S.sel.size?nm([...S.sel]):"ninguém"):KIND[k].toLowerCase())+"."}</p>
+ <div class="sci"><p>${C.why}</p></div>
+ <div class="tw"><table><tr><th>Suspeito</th><th>Resultado</th></tr>${rows}</table></div>
+ <div class="sci"><h3>Questão de exame (+20 pontos)</h3><p>${C.q[0]}</p><div class="opts" id="opts">${EX.map((o,i)=>`<button onclick="exam(${i})">${o.t}</button>`).join("")}</div><p id="fb"></p></div>
+ <p>Lembre-se: uma correspondência associa uma pessoa a uma amostra, mas não prova quando nem como o ADN foi lá deixado.</p>
+ <div class="row"><button class="pri" onclick="load(${(S.c+1)%CASES.length})">Próximo caso</button><button onclick="load(${S.c})">Repetir este caso</button></div>`;
+ R.scrollIntoView({behavior:"smooth",block:"start"});R.focus({preventScroll:true})}
+function exam(i){if(S.exDone)return;S.exDone=true;const o=EX[i];if(o.c){S.bonus=20;$("#pts").textContent=S.base+S.bonus}
+ $("#fb").textContent=o.c?"Correto.":"Incorreto. A resposta certa era: "+EX.find(x=>x.c).t+".";
+ document.querySelectorAll("#opts button").forEach(b=>b.disabled=true)}
+load(0);
+</script>
+</body>
+</html>
